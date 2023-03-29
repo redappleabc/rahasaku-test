@@ -1,0 +1,14 @@
+api-gateway/gin-bin
+api-gateway/gin-bin.exe
+api-gateway/gin-bin.exe~
+csvfiles
+export-service/gin-bin
+export-service/gin-bin.exe
+export-service/gin-bin.exe~
+export-consumer/gin-bin
+export-consumer/gin-bin.exe
+export-consumer/gin-bin.exe~
+export-consumer/build
+export-consumer/tmp
+rabbitmq_data
+

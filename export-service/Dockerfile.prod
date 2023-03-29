@@ -1,0 +1,24 @@
+FROM golang:1.20-alpine AS builder
+
+RUN apk add --no-cache git
+
+WORKDIR /go/src/export-service/
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o /go/bin/export-service
+
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /export-service
+
+COPY --from=builder /go/bin/export-service .
+
+ENTRYPOINT ["./export-service"]

@@ -1,0 +1,93 @@
+version: '3'
+
+services:
+  api-gateway:
+    build:
+      context: ./api-gateway
+    hostname: api-gateway
+    expose:
+      - "8080"
+    networks:
+      - app-net
+    depends_on:
+      - export-service
+    environment:
+      - GIN_MODE=debug
+      - EXPORT_SERVICE_HOST=http://export-service:8080
+      - RABBITMQ_HOST=amqp://guest:guest@event-dispatcher:5672/
+    volumes:
+      - ./api-gateway:/api-gateway
+      - ./csvfiles:/csvfiles
+    restart: on-failure
+    command: gin --port 8080 run main.go
+
+  export-service:
+    build:
+      context: ./export-service
+    hostname: export-service
+    networks:
+      - app-net
+    environment:
+      - GIN_MODE=debug
+      - RABBITMQ_HOST=amqp://guest:guest@event-dispatcher:5672/
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./export-service:/export-service
+      - ./csvfiles:/csvfiles
+    restart: on-failure
+    command: gin --port 8080 run main.go
+
+  export-consumer:
+    build:
+      context: ./export-consumer
+    hostname: export-consumer
+    networks:
+      - app-net
+    environment:
+      - GIN_MODE=debug
+      - RABBITMQ_HOST=amqp://guest:guest@event-dispatcher:5672/
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./export-consumer:/export-consumer
+      - ./csvfiles:/csvfiles
+    restart: on-failure
+    command: air
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: event-dispatcher
+    networks:
+      - app-net
+    expose:
+      - "15672:15672"
+      - "5672:5672"
+    tty: true
+    volumes:
+      - ./rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app-net
+    depends_on:
+      - api-gateway
+
+volumes:
+  rabbitmq_data:
+
+
+networks:
+  app-net:

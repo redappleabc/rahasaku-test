@@ -1,0 +1,22 @@
+# .air.toml
+
+root = "."
+tmp_dir = "tmp"
+build_dir = "./build"
+
+# Run the main.go file
+[build]
+   bin = "./build/app"
+   cmd = "go build -o ./build/app"
+   restart = "on-failure"
+[log]
+   mode = "console"
+# Watch all .go files in the current directory and all subdirectories
+[watcher]
+   paths = ["./"]
+   exclude_paths = ["./vendor/**/*"]
+   delay = 1000
+
+# Set the environment variables
+[env]
+   PORT = "8080"
